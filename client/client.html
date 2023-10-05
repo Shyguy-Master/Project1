@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Rivals of Aether Custom Character Tierlist</title>
+  <link rel="stylesheet" type="text/css" href="/style.css">
+  
+  <script>
+    const separateIntoTiers = (charList) => {
+        const charKeys = Object.keys(charList);
+
+        const sTierSlot = document.querySelector('#sTier');
+        const aTierSlot = document.querySelector('#aTier');
+        const bTierSlot = document.querySelector('#bTier');
+        const cTierSlot = document.querySelector('#cTier');
+        const dTierSlot = document.querySelector('#dTier');
+        const eTierSlot = document.querySelector('#eTier');
+        const fTierSlot = document.querySelector('#fTier');
+
+        let sTier = ``, aTier = ``, bTier = ``, cTier = ``, dTier = ``, eTier = ``, fTier = ``;
+
+        for (let i = 0; i < charKeys.length; i++) {
+            const currChar = charList[charKeys[i]];
+
+            switch (currChar.tier) {
+                case 's':
+                    if (sTier !== ``) {
+                        sTier += `, `;
+                    }
+                    if (currChar.note === ``) {
+                        sTier += `${currChar.name}`;
+                    } else {
+                        sTier += `<abbr title=${currChar.note}>${currChar.name}</abbr>`;
+                    }
+                    break;
+                case 'a':
+                    if (aTier !== ``) {
+                        aTier += `, `;
+                    }
+                    if (currChar.note === '') {
+                        aTier += `${currChar.name}`;
+                    } else {
+                        aTier += `<abbr title=${currChar.note}>${currChar.name}</abbr>`;
+                    }
+                    break;
+                case 'b':
+                    if (bTier !== ``) {
+                        bTier += `, `;
+                    }
+                    if (currChar.note === '') {
+                        bTier += `${currChar.name}`;
+                    } else {
+                        bTier += `<abbr title=${currChar.note}>${currChar.name}</abbr>`;
+                    }
+                    break;
+                case 'c':
+                    if (cTier !== ``) {
+                        cTier += `, `;
+                    }
+                    if (currChar.note === '') {
+                        cTier += `${currChar.name}`;
+                    } else {
+                        cTier += `<abbr title=${currChar.note}>${currChar.name}</abbr>`;
+                    }
+                    break;
+                case 'd':
+                    if (dTier !== ``) {
+                        dTier += `, `;
+                    }
+                    if (currChar.note === '') {
+                        dTier += `${currChar.name}`;
+                    } else {
+                        dTier += `<abbr title=${currChar.note}>${currChar.name}</abbr>`;
+                    }
+                    break;
+                case 'e':
+                    if (eTier !== ``) {
+                        eTier += `, `;
+                    }
+                    if (currChar.note === '') {
+                        eTier += `${currChar.name}`;
+                    } else {
+                        eTier += `<abbr title=${currChar.note}>${currChar.name}</abbr>`;
+                    }
+                    break;
+                case 'f':
+                    if (fTier !== ``) {
+                        fTier += `, `;
+                    }
+                    if (currChar.note === '') {
+                        fTier += `${currChar.name}`;
+                    } else {
+                        fTier += `<abbr title=${currChar.note}>${currChar.name}</abbr>`;
+                    }
+                    break;
+            }
+        }
+
+        sTierSlot.innerHTML = `S: ${sTier}`;
+        aTierSlot.innerHTML = `A: ${aTier}`;
+        bTierSlot.innerHTML = `B: ${bTier}`;
+        cTierSlot.innerHTML = `C: ${cTier}`;
+        dTierSlot.innerHTML = `D: ${dTier}`;
+        eTierSlot.innerHTML = `E: ${eTier}`;
+        fTierSlot.innerHTML = `F: ${fTier}`;
+    };
+
+    const handleResponse = async (response, parsedResponse) => {
+      const content = document.querySelector('#content');
+      const message = document.querySelector('#message');
+
+      switch (response.status) {
+        case 200:
+          message.innerHTML = `<b>Success</b>`;
+          break;
+        case 201:
+          message.innerHTML = `<b>Created</b>`;
+          break;
+        case 204:
+          message.innerHTML = `<b>Updated (No Content)</b>`;
+          break;
+        case 400:
+          message.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 404:
+          message.innerHTML = `<b>Not Found</b>`;
+          break;
+        default:
+          message.innerHTML = `Error code not implemented by client.`;
+          break;
+      }
+
+      if (parsedResponse) {
+        if (response.status != 204) {
+          let obj = await response.json();
+
+          if (obj.message) {
+            let jsonString = JSON.stringify(obj.message);
+            message.innerHTML += `<p>Message: ${jsonString}</p>`;
+            console.log(obj);
+          } else if (obj.characters) {
+            separateIntoTiers(obj.characters);
+            console.log(obj);
+          }
+        }
+      }
+    };
+
+    const sendPost = async (nameForm) => {
+      const nameAction = nameForm.getAttribute('action');
+      const nameMethod = nameForm.getAttribute('method');
+
+      const nameField = nameForm.querySelector('#nameField');
+      const tierField = nameForm.querySelector('#tierField');
+      const noteField = nameForm.querySelector('#noteField');
+
+      const formData = `name=${nameField.value}&tier=${tierField.value}&note=${noteField.value}`;
+
+      let response = await fetch(nameAction, {
+        method: nameMethod,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      handleResponse(response, true);
+    };
+
+    const requestUpdate = async (charForm) => {
+      const url = charForm.querySelector('#urlField').value;
+      const method = charForm.querySelector('#methodSelect').value;
+
+      let response = await fetch(url, {
+        method,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      handleResponse(response, method === 'get');
+    };
+
+    const init = () => {
+      const nameForm = document.querySelector('#nameForm');
+      const charForm = document.querySelector('#charForm');
+
+      const addChar = (e) => {
+        e.preventDefault();
+        sendPost(nameForm);
+        return false;
+      }
+
+      const getChars = (e) => {
+        e.preventDefault();
+        requestUpdate(charForm);
+        return false;
+      }
+
+      nameForm.addEventListener('submit', addChar);
+      charForm.addEventListener('submit', getChars);
+    };
+
+    window.onload = init;
+    
+  </script>
+</head>
+<body>
+  <section id="top">
+    <h3>RoA Chars List</h3>
+    <form id="nameForm" action="/addChar" method="post">
+      <label for="name">Name: </label>
+      <input id="nameField" type="text" name="name" />
+      <label for="tier">Tier: </label>
+      <select id="tierField">
+        <option value="s">S</option>
+        <option value="a">A</option>
+        <option value="b">B</option>
+        <option value="c">C</option>
+        <option value="d">D</option>
+        <option value="e">E</option>
+        <option value="f">F</option>
+      </select>
+      <label for="note">Note: </label>
+      <input id="noteField" type="text" name="note" />
+      <input type="submit" value="Add Character" />
+    </form>
+    <form id="charForm" action="/getChars" method="get">
+      <select id='urlField'>
+        <option value='/getChars'>/getChars</option>
+        <option value='/notReal'>/notReal</option>
+      </select>
+      <select id="methodSelect">
+        <option value="get">GET</option>
+        <option value="head">HEAD</option>
+      </select>
+      <input type="submit" value="Get Character" />
+    </form>
+  </section>
+  <section id="content">
+    <p id="message"></p>
+    <section id="tiers">
+        <p id="sTier">S: </p>
+        <p id="aTier">A: </p>
+        <p id="bTier">B: </p>
+        <p id="cTier">C: </p>
+        <p id="dTier">D: </p>
+        <p id="eTier">E: </p>
+        <p id="fTier">F: </p>
+    </section>
+  </section>
+</body>
+</html>

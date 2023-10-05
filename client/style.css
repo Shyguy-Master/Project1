@@ -1,0 +1,60 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #top {
+    text-align: center;
+    margin: 0 auto;
+  }
+  
+  #top h1 {
+    font-size: 2em;
+  }
+  
+  #content {
+    margin-top: 100px;
+    font-size: 2em;
+    text-align: center;
+  }
+
+  #content #tiers {
+    margin-left: 50px;
+    margin-right: 50px;
+  }
+
+  #content #tiers p {
+    margin: 0;
+    padding: 20px;
+    text-align: left;
+  }
+
+  #content #tiers #sTier {
+    background-color: lightcoral;
+  }
+
+  #content #tiers #aTier {
+    background-color: orange;
+  }
+
+  #content #tiers #bTier {
+    background-color: yellow;
+  }
+
+  #content #tiers #cTier {
+    background-color: lightgreen;
+  }
+
+  #content #tiers #dTier {
+    background-color: cyan;
+  }
+
+  #content #tiers #eTier {
+    background-color: dodgerblue;
+  }
+
+  #content #tiers #fTier {
+    background-color: violet;
+  }
