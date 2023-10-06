@@ -104,6 +104,19 @@
         fTierSlot.innerHTML = `F: ${fTier}`;
     };
 
+    const createDropDown = (charList) => {
+      const charKeys = Object.keys(charList);
+      const charField = document.querySelector('#charField');
+      let dropDown = ``;
+
+      for (let i = 0; i < charKeys.length; i++) {
+        const currChar = charList[charKeys[i]];
+        dropDown += `<option value=\'${currChar.name}\'>${currChar.name}</option>`
+      }
+
+      charField.innerHTML = dropDown;
+    };
+
     const handleResponse = async (response, parsedResponse) => {
       const content = document.querySelector('#content');
       const message = document.querySelector('#message');
@@ -139,6 +152,7 @@
             console.log(obj);
           } else if (obj.characters) {
             separateIntoTiers(obj.characters);
+            createDropDown(obj.characters);
             console.log(obj);
           }
         }
@@ -207,7 +221,7 @@
 </head>
 <body>
   <section id="top">
-    <h3>RoA Chars List</h3>
+    <h3>Rivals of Aether Custom Character Tierlist</h3>
     <form id="nameForm" action="/addChar" method="post">
       <label for="name">Name: </label>
       <input id="nameField" type="text" name="name" />
@@ -225,6 +239,9 @@
       <input id="noteField" type="text" name="note" />
       <input type="submit" value="Add Character" />
     </form>
+    <form id="editForm" action="/addChar" method="post">
+      <select id="charField"></select>
+    </form>
     <form id="charForm" action="/getChars" method="get">
       <select id='urlField'>
         <option value='/getChars'>/getChars</option>
@@ -234,7 +251,7 @@
         <option value="get">GET</option>
         <option value="head">HEAD</option>
       </select>
-      <input type="submit" value="Get Character" />
+      <input type="submit" value="Display Tier List" />
     </form>
   </section>
   <section id="content">
