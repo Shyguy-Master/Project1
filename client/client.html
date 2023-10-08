@@ -5,6 +5,7 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    // Display the character list in the tier list 
     const separateIntoTiers = (charList) => {
         const charKeys = Object.keys(charList);
 
@@ -104,19 +105,37 @@
         fTierSlot.innerHTML = `F: ${fTier}`;
     };
 
+    // Create the drop down character list in the edit form 
     const createDropDown = (charList) => {
       const charKeys = Object.keys(charList);
       const charField = document.querySelector('#charField');
-      let dropDown = ``;
+      charField.removeAttribute('disabled');
+      let dropDown = `<option value=\"_blank_\"></option>`;
 
       for (let i = 0; i < charKeys.length; i++) {
         const currChar = charList[charKeys[i]];
-        dropDown += `<option value=\'${currChar.name}\'>${currChar.name}</option>`
+        dropDown += `<option value=\"${currChar.name}\">${currChar.name}</option>`
       }
 
       charField.innerHTML = dropDown;
+
+      document.querySelector('#nameFieldEdit').value = "";
+      for (let i = 0; i < document.querySelector('#tierFieldEdit').options.length; i++) {
+        document.querySelector('#tierFieldEdit').options[i].removeAttribute('selected');
+      }
+      document.querySelector('#noteFieldEdit').value = "";
+
+      document.querySelector('#nameFieldEdit').disabled = true;
+      document.querySelector('#tierFieldEdit').disabled = true;
+      document.querySelector('#noteFieldEdit').disabled = true;
+      document.querySelector('#editSubmit').disabled = true;
+      document.querySelector('#deleteSubmit').disabled = true;
+
+      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`<b>`, ``);
+      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`</b>`, ``);
     };
 
+    // Handle the get, head, and post responses 
     const handleResponse = async (response, parsedResponse) => {
       const content = document.querySelector('#content');
       const message = document.querySelector('#message');
@@ -146,19 +165,30 @@
         if (response.status != 204) {
           let obj = await response.json();
 
+          let messageToPost = false;
+
           if (obj.message) {
             let jsonString = JSON.stringify(obj.message);
             message.innerHTML += `<p>Message: ${jsonString}</p>`;
-            console.log(obj);
-          } else if (obj.characters) {
-            separateIntoTiers(obj.characters);
+            messageToPost = true;
+          }
+
+          if (obj.characters) {
+            if (response.status == 200) {
+              separateIntoTiers(obj.characters);
+            }
             createDropDown(obj.characters);
+            messageToPost = true;
+          }
+
+          if (messageToPost) {
             console.log(obj);
           }
         }
       }
     };
 
+    // Add a character 
     const sendPost = async (nameForm) => {
       const nameAction = nameForm.getAttribute('action');
       const nameMethod = nameForm.getAttribute('method');
@@ -181,9 +211,10 @@
       handleResponse(response, true);
     };
 
+    // Get characters to display them 
     const requestUpdate = async (charForm) => {
-      const url = charForm.querySelector('#urlField').value;
-      const method = charForm.querySelector('#methodSelect').value;
+      const url = "/getChars";
+      const method = "get";
 
       let response = await fetch(url, {
         method,
@@ -195,13 +226,160 @@
       handleResponse(response, method === 'get');
     };
 
+    // Update the data in the edit form 
+    const updateEditData = async (charName) => {
+      if (charName == "_blank_") {
+        document.querySelector('#nameFieldEdit').value = "";
+        for (let i = 0; i < document.querySelector('#tierFieldEdit').options.length; i++) {
+          document.querySelector('#tierFieldEdit').options[i].removeAttribute('selected');
+        }
+        document.querySelector('#noteFieldEdit').value = "";
+
+        document.querySelector('#nameFieldEdit').disabled = true;
+        document.querySelector('#tierFieldEdit').disabled = true;
+        document.querySelector('#noteFieldEdit').disabled = true;
+        document.querySelector('#editSubmit').disabled = true;
+        document.querySelector('#deleteSubmit').disabled = true;
+
+        document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`<b>`, ``);
+        document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`</b>`, ``);
+
+        return;
+      }
+
+      const url = "/getChars";
+      const method = "get";
+
+      let response = await fetch(url, {
+        method,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      let obj = await response.json();
+
+      document.querySelector('#nameFieldEdit').value = obj.characters[charName].name;
+      for (let i = 0; i < document.querySelector('#tierFieldEdit').options.length; i++) {
+        if (document.querySelector('#tierFieldEdit').options[i].value == obj.characters[charName].tier) {
+          document.querySelector('#tierFieldEdit').options[i].selected = true;
+        } else {
+          document.querySelector('#tierFieldEdit').options[i].removeAttribute('selected');
+        }
+      }
+      document.querySelector('#noteFieldEdit').value = obj.characters[charName].note;
+
+      document.querySelector('#nameFieldEdit').removeAttribute('disabled');
+      document.querySelector('#tierFieldEdit').removeAttribute('disabled');
+      document.querySelector('#noteFieldEdit').removeAttribute('disabled');
+      document.querySelector('#editSubmit').removeAttribute('disabled');
+      document.querySelector('#deleteSubmit').removeAttribute('disabled');
+
+      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`<b>`, ``);
+      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`</b>`, ``);
+      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replace(obj.characters[charName].name, `<b>${obj.characters[charName].name}</b>`);
+    };
+
+    // Edit a character 
+    const sendUpdatePost = async (editForm) => {
+      const editAction = editForm.getAttribute('action');
+      const editMethod = editForm.getAttribute('method');
+
+      const oldNameField = editForm.querySelector('#charField');
+      const nameField = editForm.querySelector('#nameFieldEdit');
+      const tierField = editForm.querySelector('#tierFieldEdit');
+      const noteField = editForm.querySelector('#noteFieldEdit');
+
+      const formData = `oldName=${oldNameField.value}&name=${nameField.value}&tier=${tierField.value}&note=${noteField.value}`;
+
+      let response = await fetch(editAction, {
+        method: editMethod,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      handleResponse(response, true);
+    };
+
+    // Delete a character 
+    const sendDeletePost = async (editForm) => {
+      const deleteAction = "/deleteChar";
+      const deleteMethod = "post";
+      const oldNameField = editForm.querySelector('#charField');
+
+      const formData = `name=${oldNameField.value}`;
+
+      let response = await fetch(deleteAction, {
+        method: deleteMethod,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      handleResponse(response, true);
+
+      // Update the edit form 
+      document.querySelector('#nameFieldEdit').value = "";
+      for (let i = 0; i < document.querySelector('#tierFieldEdit').options.length; i++) {
+        document.querySelector('#tierFieldEdit').options[i].removeAttribute('selected');
+      }
+      document.querySelector('#noteFieldEdit').value = "";
+
+      document.querySelector('#nameFieldEdit').disabled = true;
+      document.querySelector('#tierFieldEdit').disabled = true;
+      document.querySelector('#noteFieldEdit').disabled = true;
+      document.querySelector('#editSubmit').disabled = true;
+      document.querySelector('#deleteSubmit').disabled = true;
+
+      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`<b>`, ``);
+      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`</b>`, ``);
+
+      const charKeys = Object.keys(charList);
+      const charField = document.querySelector('#charField');
+      charField.removeAttribute('disabled');
+      let dropDown = `<option value=\"_blank_\"></option>`;
+
+      for (let i = 0; i < charKeys.length; i++) {
+        const currChar = charList[charKeys[i]];
+        dropDown += `<option value=\"${currChar.name}\">${currChar.name}</option>`
+      }
+    }
+
+    // Init function 
     const init = () => {
       const nameForm = document.querySelector('#nameForm');
+      const editForm = document.querySelector('#editForm');
+      const editList = document.querySelector('#charField');
+      const deleteForm = document.querySelector('#deleteForm');
       const charForm = document.querySelector('#charForm');
+      const charSubmit = document.querySelector('#charSubmit');
 
       const addChar = (e) => {
         e.preventDefault();
         sendPost(nameForm);
+        return false;
+      }
+
+      const updateData = (e) => {
+        e.preventDefault();
+        updateEditData(e.target.value);
+        return false;
+      }
+
+      const editChar = (e) => {
+        e.preventDefault();
+        sendUpdatePost(editForm);
+        return false;
+      }
+
+      const deleteChar = (e) => {
+        e.preventDefault();
+        sendDeletePost(editForm);
         return false;
       }
 
@@ -212,50 +390,67 @@
       }
 
       nameForm.addEventListener('submit', addChar);
+      editList.addEventListener('change', updateData);
+      editForm.addEventListener('submit', editChar);
+      deleteForm.addEventListener('submit', deleteChar);
       charForm.addEventListener('submit', getChars);
     };
 
     window.onload = init;
-    
+
   </script>
 </head>
 <body>
   <section id="top">
-    <h3>Rivals of Aether Custom Character Tierlist</h3>
-    <form id="nameForm" action="/addChar" method="post">
-      <label for="name">Name: </label>
-      <input id="nameField" type="text" name="name" />
-      <label for="tier">Tier: </label>
-      <select id="tierField">
-        <option value="s">S</option>
-        <option value="a">A</option>
-        <option value="b">B</option>
-        <option value="c">C</option>
-        <option value="d">D</option>
-        <option value="e">E</option>
-        <option value="f">F</option>
-      </select>
-      <label for="note">Note: </label>
-      <input id="noteField" type="text" name="note" />
-      <input type="submit" value="Add Character" />
-    </form>
-    <form id="editForm" action="/addChar" method="post">
-      <select id="charField"></select>
-    </form>
-    <form id="charForm" action="/getChars" method="get">
-      <select id='urlField'>
-        <option value='/getChars'>/getChars</option>
-        <option value='/notReal'>/notReal</option>
-      </select>
-      <select id="methodSelect">
-        <option value="get">GET</option>
-        <option value="head">HEAD</option>
-      </select>
-      <input type="submit" value="Display Tier List" />
-    </form>
+    <h1>Rivals of Aether Custom Character Tierlist</h1>
+
+    <span id="forms">
+      <form id="nameForm" action="/addChar" method="post">
+        <input id="nameField" type="text" name="name" placeholder="Name"/>
+        <select id="tierField">
+          <option value="s" selected>S</option>
+          <option value="a">A</option>
+          <option value="b">B</option>
+          <option value="c">C</option>
+          <option value="d">D</option>
+          <option value="e">E</option>
+          <option value="f">F</option>
+        </select>
+        <input id="noteField" type="text" name="note" placeholder="Note"/>
+        <input type="submit" value="Add Character" />
+      </form>
+  
+      <form id="editForm" action="/editChar" method="post">
+        <select id="charField" disabled>
+          <option value="_blank_"></option>
+        </select>
+        <br>
+        <input id="nameFieldEdit" type="text" name="name" placeholder="Name" disabled/>
+        <select id="tierFieldEdit" disabled>
+          <option value="s">S</option>
+          <option value="a">A</option>
+          <option value="b">B</option>
+          <option value="c">C</option>
+          <option value="d">D</option>
+          <option value="e">E</option>
+          <option value="f">F</option>
+        </select>
+        <input id="noteFieldEdit" type="text" name="note" placeholder="Note" disabled/>
+        <input id="editSubmit" type="submit" value="Edit Character" disabled/>
+      </form>
+  
+      <form id="deleteForm" action="/deleteChar" method="post">
+        <input id="deleteSubmit" type="submit" value="Delete Character" disabled/>
+      </form>
+  
+      <form id="charForm" action="/getChars" method="get">
+        <input id="charSubmit" type="submit" value="Display Tier List" />
+      </form>
+    </span>
+    
+    <p id="message"></p>
   </section>
   <section id="content">
-    <p id="message"></p>
     <section id="tiers">
         <p id="sTier">S: </p>
         <p id="aTier">A: </p>

@@ -1,60 +1,96 @@
 html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-  }
-  
-  #top {
-    text-align: center;
-    margin: 0 auto;
-  }
-  
-  #top h1 {
-    font-size: 2em;
-  }
-  
-  #content {
-    margin-top: 100px;
-    font-size: 2em;
-    text-align: center;
-  }
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
 
-  #content #tiers {
-    margin-left: 50px;
-    margin-right: 50px;
-  }
+#top {
+  text-align: center;
+  margin: 0 auto;
+  padding: 10px 50px 30px;
+  color: white;
+  background-color: black;
+}
 
-  #content #tiers p {
-    margin: 0;
-    padding: 20px;
-    text-align: left;
-  }
+#top h1 {
+  font-size: 2em;
+}
 
-  #content #tiers #sTier {
-    background-color: lightcoral;
-  }
+#top #forms {
+  display: inline-grid;
+  grid-template-areas: 
+    'nameForm nameForm'
+    'editForm editForm'
+    'deleteForm charForm';
+  gap: 10px;
+}
 
-  #content #tiers #aTier {
-    background-color: orange;
-  }
+#top #forms form {
+  text-align: center;
+}
 
-  #content #tiers #bTier {
-    background-color: yellow;
-  }
+#top #forms #nameForm {
+  grid-area: nameForm;
+}
 
-  #content #tiers #cTier {
-    background-color: lightgreen;
-  }
+#top #forms #editForm {
+  grid-area: editForm;
+}
 
-  #content #tiers #dTier {
-    background-color: cyan;
-  }
+#top #forms #deleteForm {
+  grid-area: deleteForm;
+}
 
-  #content #tiers #eTier {
-    background-color: dodgerblue;
-  }
+#top #forms #charForm {
+  grid-area: charForm;
+}
 
-  #content #tiers #fTier {
-    background-color: violet;
-  }
+#top p {
+  height: 50px;
+}
+
+#content {
+  margin-top: 30px;
+  font-size: 2em;
+  text-align: center;
+}
+
+#content #tiers {
+  margin-left: 50px;
+  margin-right: 50px;
+}
+
+#content #tiers p {
+  margin: 0;
+  padding: 20px;
+  text-align: left;
+}
+
+#content #tiers #sTier {
+  background-color: lightcoral;
+}
+
+#content #tiers #aTier {
+  background-color: orange;
+}
+
+#content #tiers #bTier {
+  background-color: yellow;
+}
+
+#content #tiers #cTier {
+  background-color: lightgreen;
+}
+
+#content #tiers #dTier {
+  background-color: cyan;
+}
+
+#content #tiers #eTier {
+  background-color: dodgerblue;
+}
+
+#content #tiers #fTier {
+  background-color: violet;
+}

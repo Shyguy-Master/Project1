@@ -36,11 +36,46 @@ const addChar = (request, response, body) => {
     return respondJSON(request, response, 400, responseJSON);
   }
 
-  let responseCode = 204;
+  if (characters[body.name]) {
+    responseJSON.message = 'Character already exists.';
+    responseJSON.id = 'addCharProhibitedParams';
+    return respondJSON(request, response, 400, responseJSON);
+  }
+
+  characters[body.name] = {};
+  characters[body.name].name = body.name;
+  characters[body.name].tier = body.tier;
+  if (!body.note) {
+    characters[body.name].note = '';
+  } else {
+    characters[body.name].note = body.note;
+  }
+
+  responseJSON.message = 'Created Successfully';
+  responseJSON.characters = characters;
+  return respondJSON(request, response, 201, responseJSON);
+};
+
+// editChar
+const editChar = (request, response, body) => {
+  const responseJSON = {
+    message: 'Name and tier are both required.',
+  };
+
+  if (!body.name || !body.tier) {
+    responseJSON.id = 'editCharMissingParams';
+    return respondJSON(request, response, 400, responseJSON);
+  }
+
+  const responseCode = 204;
 
   if (!characters[body.name]) {
-    responseCode = 201;
     characters[body.name] = {};
+    delete characters[body.oldName];
+  } else if (body.name !== body.oldName) {
+    responseJSON.message = 'Character already exists.';
+    responseJSON.id = 'editCharProhibitedParams';
+    return respondJSON(request, response, 400, responseJSON);
   }
 
   characters[body.name].name = body.name;
@@ -51,12 +86,22 @@ const addChar = (request, response, body) => {
     characters[body.name].note = body.note;
   }
 
-  if (responseCode === 201) {
-    responseJSON.message = 'Created Successfully';
-    return respondJSON(request, response, responseCode, responseJSON);
+  return respondJSONMeta(request, response, responseCode);
+};
+
+// deleteChar
+const deleteChar = (request, response, body) => {
+  if (!characters[body.name]) {
+    const responseJSON = {
+      message: 'Character does not exist.',
+      id: 'deleteCharProhibitedParams',
+    };
+
+    return respondJSON(request, response, 400, responseJSON);
   }
 
-  return respondJSONMeta(request, response, responseCode);
+  delete characters[body.name];
+  return respondJSONMeta(request, response, 204);
 };
 
 // notFound
@@ -75,6 +120,8 @@ const notFoundMeta = (request, response) => respondJSONMeta(request, response, 4
 module.exports = {
   getChars,
   addChar,
+  editChar,
+  deleteChar,
   notFound,
   getCharsMeta,
   notFoundMeta,
