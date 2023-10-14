@@ -20,9 +20,9 @@ html, body {
 #top #forms {
   display: inline-grid;
   grid-template-areas: 
-    'nameForm nameForm'
-    'editForm editForm'
-    'deleteForm charForm';
+    'nameForm nameForm nameForm'
+    'editForm editForm editForm'
+    'checkForm charForm deleteForm';
   gap: 10px;
 }
 
@@ -38,12 +38,18 @@ html, body {
   grid-area: editForm;
 }
 
-#top #forms #deleteForm {
-  grid-area: deleteForm;
+#top #forms #checkForm {
+  grid-area: checkForm;
+  text-align: left;
 }
 
 #top #forms #charForm {
   grid-area: charForm;
+}
+
+#top #forms #deleteForm {
+  grid-area: deleteForm;
+  text-align: right;
 }
 
 #top p {

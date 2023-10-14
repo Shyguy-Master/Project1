@@ -101,7 +101,10 @@ const deleteChar = (request, response, body) => {
   }
 
   delete characters[body.name];
-  return respondJSONMeta(request, response, 204);
+  const responseJSON = {
+    characters,
+  };
+  return respondJSON(request, response, 200, responseJSON);
 };
 
 // notFound

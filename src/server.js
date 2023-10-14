@@ -22,6 +22,8 @@ const urlStruct = {
   POST: {
     '/addChar': jsonHandler.addChar,
     '/editChar': jsonHandler.editChar,
+  },
+  DELETE: {
     '/deleteChar': jsonHandler.deleteChar,
   },
 };
@@ -55,11 +57,8 @@ const onRequest = (request, response) => {
   }
 
   if (request.method === 'POST') {
-    // if (parsedUrl.pathname === '/addChar') {
-    //   return parseBody(request, response, urlStruct[request.method][parsedUrl.pathname]);
-    // } else if (parsedUrl.pathname === '/editChar') {
-    //   return parseBody(request, response, urlStruct[request.method][parsedUrl.pathname]);
-    // }
+    return parseBody(request, response, urlStruct[request.method][parsedUrl.pathname]);
+  } if (request.method === 'DELETE') {
     return parseBody(request, response, urlStruct[request.method][parsedUrl.pathname]);
   } if (urlStruct[request.method][parsedUrl.pathname]) {
     return urlStruct[request.method][parsedUrl.pathname](request, response);

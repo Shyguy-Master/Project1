@@ -27,7 +27,7 @@
                     if (sTier !== ``) {
                         sTier += `, `;
                     }
-                    if (currChar.note === ``) {
+                    if (currChar.note === `` || !document.querySelector('#noteCheck').checked) {
                         sTier += `${currChar.name}`;
                     } else {
                         sTier += `<abbr title=\"${currChar.note}\">${currChar.name}</abbr>`;
@@ -37,7 +37,7 @@
                     if (aTier !== ``) {
                         aTier += `, `;
                     }
-                    if (currChar.note === '') {
+                    if (currChar.note === '' || !document.querySelector('#noteCheck').checked) {
                         aTier += `${currChar.name}`;
                     } else {
                         aTier += `<abbr title=\"${currChar.note}\">${currChar.name}</abbr>`;
@@ -47,7 +47,7 @@
                     if (bTier !== ``) {
                         bTier += `, `;
                     }
-                    if (currChar.note === '') {
+                    if (currChar.note === '' || !document.querySelector('#noteCheck').checked) {
                         bTier += `${currChar.name}`;
                     } else {
                         bTier += `<abbr title=\"${currChar.note}\">${currChar.name}</abbr>`;
@@ -57,7 +57,7 @@
                     if (cTier !== ``) {
                         cTier += `, `;
                     }
-                    if (currChar.note === '') {
+                    if (currChar.note === '' || !document.querySelector('#noteCheck').checked) {
                         cTier += `${currChar.name}`;
                     } else {
                         cTier += `<abbr title=\"${currChar.note}\">${currChar.name}</abbr>`;
@@ -67,7 +67,7 @@
                     if (dTier !== ``) {
                         dTier += `, `;
                     }
-                    if (currChar.note === '') {
+                    if (currChar.note === '' || !document.querySelector('#noteCheck').checked) {
                         dTier += `${currChar.name}`;
                     } else {
                         dTier += `<abbr title=\"${currChar.note}\">${currChar.name}</abbr>`;
@@ -77,7 +77,7 @@
                     if (eTier !== ``) {
                         eTier += `, `;
                     }
-                    if (currChar.note === '') {
+                    if (currChar.note === '' || !document.querySelector('#noteCheck').checked) {
                         eTier += `${currChar.name}`;
                     } else {
                         eTier += `<abbr title=\"${currChar.note}\">${currChar.name}</abbr>`;
@@ -87,7 +87,7 @@
                     if (fTier !== ``) {
                         fTier += `, `;
                     }
-                    if (currChar.note === '') {
+                    if (currChar.note === '' || !document.querySelector('#noteCheck').checked) {
                         fTier += `${currChar.name}`;
                     } else {
                         fTier += `<abbr title=\"${currChar.note}\">${currChar.name}</abbr>`;
@@ -136,19 +136,23 @@
     };
 
     // Handle the get, head, and post responses 
-    const handleResponse = async (response, parsedResponse) => {
+    const handleResponse = async (response, parsedResponse, deletingChar) => {
       const content = document.querySelector('#content');
       const message = document.querySelector('#message');
 
       switch (response.status) {
         case 200:
-          message.innerHTML = `<b>Success</b>`;
+          if (deletingChar) {
+            message.innerHTML = `<b>Character Deleted</b>`;
+          } else {
+            message.innerHTML = `<b>Characters Displayed</b>`;
+          }
           break;
         case 201:
-          message.innerHTML = `<b>Created</b>`;
+          message.innerHTML = `<b>New Character Created</b>`;
           break;
         case 204:
-          message.innerHTML = `<b>Updated (No Content)</b>`;
+          message.innerHTML = `<b>Character Updated</b>`;
           break;
         case 400:
           message.innerHTML = `<b>Bad Request</b>`;
@@ -174,7 +178,7 @@
           }
 
           if (obj.characters) {
-            if (response.status == 200) {
+            if ((response.status == 200 && !deletingChar) || document.querySelector('#autoCheck').checked) {
               separateIntoTiers(obj.characters);
             }
             createDropDown(obj.characters);
@@ -184,6 +188,23 @@
           if (messageToPost) {
             console.log(obj);
           }
+        }
+
+        if (response.status == 204 && document.querySelector('#autoCheck').checked) {
+          const url = "/getChars";
+          const method = "get";
+
+          let newResponse = await fetch(url, {
+            method,
+            headers: {
+              'Accept': 'application/json',
+            },
+          });
+
+          let obj = await newResponse.json();
+
+          separateIntoTiers(obj.characters);
+          updateEditData(document.querySelector('#charField').value);
         }
       }
     };
@@ -208,7 +229,7 @@
         body: formData,
       });
 
-      handleResponse(response, true);
+      handleResponse(response, true, false);
     };
 
     // Get characters to display them 
@@ -223,7 +244,7 @@
         },
       });
 
-      handleResponse(response, method === 'get');
+      handleResponse(response, method === 'get', false);
     };
 
     // Update the data in the edit form 
@@ -301,13 +322,13 @@
         body: formData,
       });
 
-      handleResponse(response, true);
+      handleResponse(response, true, false);
     };
 
     // Delete a character 
     const sendDeletePost = async (editForm) => {
       const deleteAction = "/deleteChar";
-      const deleteMethod = "post";
+      const deleteMethod = "delete";
       const oldNameField = editForm.querySelector('#charField');
 
       const formData = `name=${oldNameField.value}`;
@@ -321,32 +342,31 @@
         body: formData,
       });
 
-      handleResponse(response, true);
+      handleResponse(response, true, true);
+    }
 
-      // Update the edit form 
-      document.querySelector('#nameFieldEdit').value = "";
-      for (let i = 0; i < document.querySelector('#tierFieldEdit').options.length; i++) {
-        document.querySelector('#tierFieldEdit').options[i].removeAttribute('selected');
-      }
-      document.querySelector('#noteFieldEdit').value = "";
+    // Update the page when the checkboxes are checked or unchecked 
+    const changeCheckStates = async (checkForm) => {
+      const noteCheck = document.querySelector('#noteCheck');
+      const autoCheck = document.querySelector('#autoCheck');
 
-      document.querySelector('#nameFieldEdit').disabled = true;
-      document.querySelector('#tierFieldEdit').disabled = true;
-      document.querySelector('#noteFieldEdit').disabled = true;
-      document.querySelector('#editSubmit').disabled = true;
-      document.querySelector('#deleteSubmit').disabled = true;
+      if (autoCheck.checked) {
+        document.querySelector('#charSubmit').disabled = true;
+        const url = "/getChars";
+        const method = "get";
 
-      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`<b>`, ``);
-      document.querySelector('#tiers').innerHTML = document.querySelector('#tiers').innerHTML.replaceAll(`</b>`, ``);
+        let response = await fetch(url, {
+          method,
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
 
-      const charKeys = Object.keys(charList);
-      const charField = document.querySelector('#charField');
-      charField.removeAttribute('disabled');
-      let dropDown = `<option value=\"_blank_\"></option>`;
+        let obj = await response.json();
 
-      for (let i = 0; i < charKeys.length; i++) {
-        const currChar = charList[charKeys[i]];
-        dropDown += `<option value=\"${currChar.name}\">${currChar.name}</option>`
+        separateIntoTiers(obj.characters);
+      } else {
+        document.querySelector('#charSubmit').removeAttribute('disabled');
       }
     }
 
@@ -358,6 +378,7 @@
       const deleteForm = document.querySelector('#deleteForm');
       const charForm = document.querySelector('#charForm');
       const charSubmit = document.querySelector('#charSubmit');
+      const checkForm = document.querySelector('#checkForm');
 
       const addChar = (e) => {
         e.preventDefault();
@@ -389,11 +410,18 @@
         return false;
       }
 
+      const changeChecks = (e) => {
+        e.preventDefault();
+        changeCheckStates(checkForm);
+        return false;
+      }
+
       nameForm.addEventListener('submit', addChar);
       editList.addEventListener('change', updateData);
       editForm.addEventListener('submit', editChar);
       deleteForm.addEventListener('submit', deleteChar);
       charForm.addEventListener('submit', getChars);
+      checkForm.addEventListener('change', changeChecks);
     };
 
     window.onload = init;
@@ -438,13 +466,20 @@
         <input id="noteFieldEdit" type="text" name="note" placeholder="Note" disabled/>
         <input id="editSubmit" type="submit" value="Edit Character" disabled/>
       </form>
-  
-      <form id="deleteForm" action="/deleteChar" method="post">
-        <input id="deleteSubmit" type="submit" value="Delete Character" disabled/>
+
+      <form id="checkForm">
+        <input type="checkbox" id="noteCheck" name="noteCheck" value="DisplayNotes">
+        <label for="noteCheck">Display Notes</label><br>
+        <input type="checkbox" id="autoCheck" name="autoCheck" value="AutoUpdate">
+        <label for="autoCheck">Auto Update Tierlist</label>
       </form>
   
       <form id="charForm" action="/getChars" method="get">
         <input id="charSubmit" type="submit" value="Display Tier List" />
+      </form>
+
+      <form id="deleteForm" action="/deleteChar" method="delete">
+        <input id="deleteSubmit" type="submit" value="Delete Character" disabled/>
       </form>
     </span>
     
